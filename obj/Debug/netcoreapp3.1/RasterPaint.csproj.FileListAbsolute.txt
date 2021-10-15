@@ -1,0 +1,15 @@
+C:\Users\Szymon\source\repos\RasterPaint\bin\Debug\netcoreapp3.1\RasterPaint.exe
+C:\Users\Szymon\source\repos\RasterPaint\bin\Debug\netcoreapp3.1\RasterPaint.deps.json
+C:\Users\Szymon\source\repos\RasterPaint\bin\Debug\netcoreapp3.1\RasterPaint.runtimeconfig.json
+C:\Users\Szymon\source\repos\RasterPaint\bin\Debug\netcoreapp3.1\RasterPaint.runtimeconfig.dev.json
+C:\Users\Szymon\source\repos\RasterPaint\bin\Debug\netcoreapp3.1\RasterPaint.dll
+C:\Users\Szymon\source\repos\RasterPaint\bin\Debug\netcoreapp3.1\RasterPaint.pdb
+C:\Users\Szymon\source\repos\RasterPaint\obj\Debug\netcoreapp3.1\RasterPaint.csprojAssemblyReference.cache
+C:\Users\Szymon\source\repos\RasterPaint\obj\Debug\netcoreapp3.1\RasterPaint.Form1.resources
+C:\Users\Szymon\source\repos\RasterPaint\obj\Debug\netcoreapp3.1\RasterPaint.csproj.GenerateResource.cache
+C:\Users\Szymon\source\repos\RasterPaint\obj\Debug\netcoreapp3.1\RasterPaint.AssemblyInfoInputs.cache
+C:\Users\Szymon\source\repos\RasterPaint\obj\Debug\netcoreapp3.1\RasterPaint.AssemblyInfo.cs
+C:\Users\Szymon\source\repos\RasterPaint\obj\Debug\netcoreapp3.1\RasterPaint.csproj.CoreCompileInputs.cache
+C:\Users\Szymon\source\repos\RasterPaint\obj\Debug\netcoreapp3.1\RasterPaint.dll
+C:\Users\Szymon\source\repos\RasterPaint\obj\Debug\netcoreapp3.1\RasterPaint.pdb
+C:\Users\Szymon\source\repos\RasterPaint\obj\Debug\netcoreapp3.1\RasterPaint.genruntimeconfig.cache
