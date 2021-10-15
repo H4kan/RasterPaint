@@ -20,6 +20,15 @@ namespace RasterPaint
          
         public void AppendLine(Line line)
         {
+            if (Edges.Count > 1)
+            {
+                var lastPoint = Edges[Edges.Count - 1].Points[Edges[Edges.Count - 1].Points.Count - 1];
+                var lastNewPoint = line.Points[line.Points.Count - 1];
+                if (lastPoint.X == lastNewPoint.X && lastPoint.Y == lastNewPoint.Y)
+                {
+                    line.Points.Reverse();
+                }
+            }
             this.Vertices.Add(line.Points[line.Points.Count - 1]);
             this.Edges.Add(line);
         }
