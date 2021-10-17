@@ -13,5 +13,11 @@ namespace RasterPaint
         {
             Points.Add(point);
         }
+
+        public Point EvaluateMidPoint()
+        {
+            return new Point((Points[0].X + Points[Points.Count - 1].X) / 2,
+                (Points[0].Y + Points[Points.Count - 1].Y) / 2);
+        }
     }
 }

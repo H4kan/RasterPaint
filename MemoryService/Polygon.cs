@@ -36,6 +36,17 @@ namespace RasterPaint
         public void CompletePolygon(Line line)
         {
             this.Edges.Add(line);
+            this.FixLineDirection(this.Edges.Count - 1);
+        }
+
+        public void FixLineDirection(int index)
+        {
+            if (this.Vertices[index] != this.Edges[index].Points[0])
+            {
+                this.Edges[index].Points.Reverse();
+
+            }
+
         }
     }
 }

@@ -14,11 +14,14 @@ namespace RasterPaint
     {
         Bitmap bmp;
 
-        private bool IsLineTracking { get; set; }
+        public EditMode Mode { get; set; }
 
         private Polygon CurrentPolygon { get; set; }
+        private Circle CurrentCircle { get; set; }
 
         LineService LineService { get; set; }
+
+        CircleService CircleService { get; set; }
         MemoryService MemoryService { get; set; }
 
         public Form1()
@@ -30,7 +33,15 @@ namespace RasterPaint
         {
             SetupScreen();
             this.LineService = new LineService(bmp, pictureBox);
-            this.MemoryService = new MemoryService(this.polygonPanel, this.polygonListBox, this.verticesListBox);
+            this.MemoryService = new MemoryService(
+                this.polygonPanel, 
+                this.polygonListBox,
+                this.circlePanel,
+                this.circlesListBox,
+                this.pictureBox, 
+                this.LineService, 
+                this);
+            this.CircleService = new CircleService(this, this.bmp, this.pictureBox, this.MemoryService);
         }
 
         private void SetupScreen()
@@ -40,32 +51,14 @@ namespace RasterPaint
             pictureBox.Image = bmp;
         }
 
-        private void SetPixel(int x, int y)
-        {
-            bmp.SetPixel(x, y, Color.Black);
-        }
-
-    
-        private void BeginLine(object sender, MouseEventArgs e)
-        {
-            pictureBox.Invalidate();
-            this.pictureBox.MouseClick -= BeginLine;
-            this.LineService.BeginTracking(e.X, e.Y);
-            this.pictureBox.MouseMove += this.LineService.LineTracker.Update;
-            this.pictureBox.MouseClick += StopLineTracking;
-            this.IsLineTracking = true;
-        }
-
         private void BeginPolygon(object sender, MouseEventArgs e)
         {
             CurrentPolygon = new Polygon(e.X, e.Y);
             pictureBox.Invalidate();
             this.pictureBox.MouseClick -= BeginPolygon;
             this.LineService.BeginTracking(e.X, e.Y);
-            this.pictureBox.MouseMove += this.LineService.LineTracker.Update;
+
             this.pictureBox.MouseClick += ContinuePolygon;
-           
-            this.IsLineTracking = true;
 
         }
 
@@ -80,7 +73,7 @@ namespace RasterPaint
                 this.LineService.StopTracking();
                 pictureBox.Invalidate();
                 this.LineService.BeginTracking(e.X, e.Y);
-                this.pictureBox.MouseMove += this.LineService.LineTracker.Update;
+        
                 this.pictureBox.MouseClick += ContinuePolygon;
       
             }
@@ -99,85 +92,245 @@ namespace RasterPaint
                     CurrentPolygon.Vertices[CurrentPolygon.Vertices.Count - 1].X,
                     CurrentPolygon.Vertices[CurrentPolygon.Vertices.Count - 1].Y));
 
-
-                this.IsLineTracking = false;
-
                 this.MemoryService.SavePolygon(CurrentPolygon);
+
+                this.Mode = EditMode.Default;
 
                 this.NewPolygonBtn.FlatAppearance.BorderColor = Color.Black;
             }
         }
 
-        private void StopLineTracking(object sender, MouseEventArgs e)
-        {
-            this.pictureBox.MouseMove -= this.LineService.LineTracker.Update;
-            this.pictureBox.MouseClick -= StopLineTracking;
-            this.LineService.StopTracking();
-            
-            this.IsLineTracking = false;
-            this.NewLineBtn.FlatAppearance.BorderColor = Color.Black;
-        }
-
-        private void NewLine_Click(object sender, EventArgs e)
-        {
-            if (!IsLineTracking)
-            {
-                this.pictureBox.MouseClick += BeginLine;
-                this.NewLineBtn.FlatAppearance.BorderColor = Color.Red;
-            }
-        }
-
-
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {
-            switch (keyData) {
-                case Keys.E: 
-                    if (!IsLineTracking)
-                    {
-                        this.NewLineBtn.FlatAppearance.BorderColor = Color.Red;
-                        this.pictureBox.MouseClick += BeginLine;
-                    }
-                    return true;
-                case Keys.P:
-                    if (!IsLineTracking)
-                    {
-                        this.NewPolygonBtn.FlatAppearance.BorderColor = Color.Red;
-                        this.pictureBox.MouseClick += BeginPolygon;
-                    }
-                    return true;
-
-            }
-            return base.ProcessCmdKey(ref msg, keyData);
-        }
-
-        private void AbortTracking()
-        {
-            this.pictureBox.MouseMove -= this.LineService.LineTracker.Update;
-            this.pictureBox.MouseClick -= StopLineTracking;
-            this.LineService.AbortTracking();
-            this.NewLineBtn.FlatAppearance.BorderColor = Color.Black;
-            this.IsLineTracking = false;
-        }
-
         private void AbortPolygonTracking()
         {
             this.pictureBox.MouseMove -= this.LineService.LineTracker.Update;
-            this.pictureBox.MouseClick -= StopLineTracking;
+            this.pictureBox.MouseClick -= ContinuePolygon;
             this.LineService.AbortTracking();
-            this.IsLineTracking = false;
+            foreach(var line in CurrentPolygon.Edges)
+            {
+                this.LineService.EraseLine(line);
+            }
+            CurrentPolygon = null;
         }
 
         private void NewPolygonBtn_Click(object sender, EventArgs e)
         {
-            this.NewPolygonBtn.FlatAppearance.BorderColor = Color.Red;
-            this.pictureBox.MouseClick += BeginPolygon;
+            if (this.Mode == EditMode.AddPolygon)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.MemoryService.ExitPolygonOptions();
+                this.MemoryService.ExitCircleOptions();
+                this.NewPolygonBtn.FlatAppearance.BorderColor = Color.Red;
+                this.pictureBox.MouseClick += BeginPolygon;
+                this.Mode = EditMode.AddPolygon;
+            }
             
         }
 
         private void polygonListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            this.MemoryService.SelectedPolygon = this.MemoryService.Polygons[this.polygonListBox.SelectedItems[0].Index];
-            this.MemoryService.ShowPolygonInfo();
+            this.ExitAnyMode();
+            if (this.polygonListBox.SelectedItems.Count > 0)
+            {
+                this.MemoryService.ExitCircleOptions();
+                this.MemoryService.SelectedPolygon = this.MemoryService.Polygons[this.polygonListBox.SelectedItems[0].Index];
+                this.MemoryService.ShowPolygonOptions();
+            }
+            else
+            {
+                this.polygonPanel.Visible = false;
+            }
+        }
+
+        private void moveVerticeBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.MoveVertice)
+            {
+                this.ExitAnyMode();     
+            }
+            else
+            {
+                switchToMoveVerticeMode();
+            }
+        }
+
+        public void switchToMoveVerticeMode()
+        {
+            this.ExitAnyMode();
+            this.Mode = EditMode.MoveVertice;
+            this.moveVerticeBtn.FlatAppearance.BorderColor = Color.Red;
+            this.MemoryService.EnterMoveVerticeMode();
+        }
+
+        private void deleteVerticeBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.DeleteVertice)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.Mode = EditMode.DeleteVertice;
+                this.deleteVerticeBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.EnterDeleteVerticeMode();
+            }
+            
+        }
+
+        public void ExitAnyMode()
+        {
+            switch (this.Mode)
+            {
+                case EditMode.MoveVertice:
+                    this.moveVerticeBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.MemoryService.ExitVertexPickersMode();
+                    break;
+                case EditMode.DeleteVertice:
+                    this.deleteVerticeBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.MemoryService.ExitVertexPickersMode();
+                    break;
+                case EditMode.AddPolygon:
+                    this.NewPolygonBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.AbortPolygonTracking();
+                    break;
+                case EditMode.AddVertice:
+                    this.addVerticeBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.MemoryService.ExitVertexPickersMode();
+                    break;
+                case EditMode.MoveEdge:
+                    this.moveEdgeBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.MemoryService.ExitVertexPickersMode();
+                    break;
+                case EditMode.MovePolygon:
+                    this.movePolygonBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.MemoryService.ExitVertexPickersMode();
+                    break;
+                case EditMode.AddCircle:
+                    this.newCircleBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.CircleService.AbortCircleTracking();
+                    break;
+                case EditMode.MoveCircle:
+                    this.moveCircleBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.MemoryService.ExitVertexPickersMode();
+                    break;
+                case EditMode.ChangeRadius:
+                    this.changeRadiusBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.MemoryService.ExitVertexPickersMode();
+                    break;
+            }
+            this.Mode = EditMode.Default;
+        }
+
+        private void addVerticeBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.AddVertice)
+            {
+                this.ExitAnyMode();
+
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.Mode = EditMode.AddVertice;
+                this.addVerticeBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.EnterAddVerticeMode();
+            }
+        }
+
+        private void moveEdgeBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.MoveEdge)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.Mode = EditMode.MoveEdge;
+                this.moveEdgeBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.EnterMoveEdgeMode();
+            }
+        }
+
+        private void movePolygonBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.MovePolygon)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.Mode = EditMode.MovePolygon;
+                this.movePolygonBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.EnterMovePolygonMode();
+            }
+        }
+
+        private void newCircleBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.AddCircle)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.MemoryService.ExitPolygonOptions();
+                this.MemoryService.ExitCircleOptions();
+                this.Mode = EditMode.AddCircle;
+                this.newCircleBtn.FlatAppearance.BorderColor = Color.Red;
+                this.CircleService.BeginCircle();
+            }
+        }
+
+        private void circlesListBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            this.ExitAnyMode();
+            if (this.circlesListBox.SelectedItems.Count > 0)
+            {
+                this.MemoryService.ExitPolygonOptions();
+                this.MemoryService.SelectedCircle = this.MemoryService.Circles[this.circlesListBox.SelectedItems[0].Index];
+                this.MemoryService.ShowCircleOptions();
+            }
+            else
+            {
+                this.circlePanel.Visible = false;
+            }
+        }
+
+        private void moveCircleBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.MoveCircle)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.Mode = EditMode.MoveCircle;
+                this.moveCircleBtn.FlatAppearance.BorderColor = Color.Red;
+                this.CircleService.EnterMoveCircleMode();
+            }
+        }
+
+        private void changeRadiusBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.ChangeRadius)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.Mode = EditMode.ChangeRadius;
+                this.changeRadiusBtn.FlatAppearance.BorderColor = Color.Red;
+                this.CircleService.EnterChangeRadiusMode();
+            }
         }
     }
 
