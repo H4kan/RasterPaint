@@ -398,6 +398,22 @@ namespace RasterPaint
             {
                 if (polygon.Edges[nextIdx].Relation != Relation.None)
                 {
+                    if (polygon.Edges[nextIdx].Relation == Relation.Tangency)
+                    {
+                        var relationHandler = this.RelationHandlers
+                            .Find(r => r.EdgeTarget == polygon.Edges[nextIdx] && r.Type == Relation.Tangency);
+
+                        var circleToMove = relationHandler.RelatedRelation.CircleTarget;
+                        
+                        this.CircleService.EraseCircle(circleToMove);
+
+                        circleToMove.Origin = new Point(
+                            circleToMove.Origin.X + offsetTop.Item1,
+                            circleToMove.Origin.Y + offsetTop.Item2);
+
+                        this.CircleService.CreateCircle(circleToMove);
+                    }
+
                     this.MemoryService.LineService.EraseLine(polygon.Edges[nextIdx]);
 
                     polygon.Edges[nextIdx].Points[0] = new Point(
@@ -411,6 +427,8 @@ namespace RasterPaint
                     polygon.Vertices[nextIdx] = polygon.Edges[nextIdx].Points[0];
 
                     this.MemoryService.LineService.CreateLine(polygon.Edges[nextIdx]);
+
+                    
 
                     nextIdx = (nextIdx + 1) % polygon.Edges.Count;
                 }
@@ -434,6 +452,21 @@ namespace RasterPaint
             {
                 if (polygon.Edges[prevIdx].Relation != Relation.None)
                 {
+                    if (polygon.Edges[prevIdx].Relation == Relation.Tangency)
+                    {
+                        var relationHandler = this.RelationHandlers
+                            .Find(r => r.EdgeTarget == polygon.Edges[prevIdx] && r.Type == Relation.Tangency);
+
+                        var circleToMove = relationHandler.RelatedRelation.CircleTarget;
+
+                        this.CircleService.EraseCircle(circleToMove);
+
+                        circleToMove.Origin = new Point(
+                            circleToMove.Origin.X + offsetBottom.Item1,
+                            circleToMove.Origin.Y + offsetBottom.Item2);
+
+                        this.CircleService.CreateCircle(circleToMove);
+                    }
                     this.MemoryService.LineService.EraseLine(polygon.Edges[prevIdx]);
 
                     polygon.Edges[prevIdx].Points[0] = new Point(
