@@ -6,4 +6,10 @@
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Update="VertexPickers\PerpendicularityPicker.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+
 </Project>

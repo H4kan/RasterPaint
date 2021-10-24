@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RasterPaint.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -16,13 +17,16 @@ namespace RasterPaint
 
         public EditMode Mode { get; set; }
 
+        public Relation RelationMode { get; set; }
+
         private Polygon CurrentPolygon { get; set; }
-        private Circle CurrentCircle { get; set; }
 
         LineService LineService { get; set; }
 
-        CircleService CircleService { get; set; }
+        public CircleService CircleService { get; set; }
         MemoryService MemoryService { get; set; }
+
+        public RelationService RelationService { get; set; }
 
         public Form1()
         {
@@ -32,16 +36,21 @@ namespace RasterPaint
         private void Form1_Load(object sender, EventArgs e)
         {
             SetupScreen();
+
             this.LineService = new LineService(bmp, pictureBox);
             this.MemoryService = new MemoryService(
-                this.polygonPanel, 
+                this.polyActions, 
                 this.polygonListBox,
-                this.circlePanel,
+                this.circleActions,
                 this.circlesListBox,
+                this.relationBox,
                 this.pictureBox, 
                 this.LineService, 
                 this);
             this.CircleService = new CircleService(this, this.bmp, this.pictureBox, this.MemoryService);
+            this.RelationService = new RelationService(this.MemoryService, this.lengthInput, this.CircleService);
+
+            //this.MemoryService.CreateInitialScene();
         }
 
         private void SetupScreen()
@@ -83,7 +92,6 @@ namespace RasterPaint
 
                 var lastLine = this.LineService.LineTracker.LastLine;
 
-                
                 this.LineService.AbortTracking();
 
                 CurrentPolygon.CompletePolygon(
@@ -102,14 +110,21 @@ namespace RasterPaint
 
         private void AbortPolygonTracking()
         {
-            this.pictureBox.MouseMove -= this.LineService.LineTracker.Update;
-            this.pictureBox.MouseClick -= ContinuePolygon;
-            this.LineService.AbortTracking();
-            foreach(var line in CurrentPolygon.Edges)
+            if (this.LineService.IsLineTracking)
             {
-                this.LineService.EraseLine(line);
+                this.pictureBox.MouseMove -= this.LineService.LineTracker.Update;
+                this.pictureBox.MouseClick -= ContinuePolygon;
+                this.LineService.AbortTracking();
+                foreach (var line in CurrentPolygon.Edges)
+                {
+                    this.LineService.EraseLine(line);
+                }
+                CurrentPolygon = null;
             }
-            CurrentPolygon = null;
+            else
+            {
+                this.pictureBox.MouseClick -= BeginPolygon;
+            }
         }
 
         private void NewPolygonBtn_Click(object sender, EventArgs e)
@@ -121,6 +136,7 @@ namespace RasterPaint
             else
             {
                 this.ExitAnyMode();
+                this.ExitAnyRelationMode();
                 this.MemoryService.ExitPolygonOptions();
                 this.MemoryService.ExitCircleOptions();
                 this.NewPolygonBtn.FlatAppearance.BorderColor = Color.Red;
@@ -133,15 +149,17 @@ namespace RasterPaint
         private void polygonListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             this.ExitAnyMode();
+            this.ExitAnyRelationMode();
             if (this.polygonListBox.SelectedItems.Count > 0)
             {
                 this.MemoryService.ExitCircleOptions();
+                this.MemoryService.ExitRelationOptions();
                 this.MemoryService.SelectedPolygon = this.MemoryService.Polygons[this.polygonListBox.SelectedItems[0].Index];
                 this.MemoryService.ShowPolygonOptions();
             }
             else
             {
-                this.polygonPanel.Visible = false;
+                this.polyActions.Visible = false;
             }
         }
 
@@ -221,8 +239,43 @@ namespace RasterPaint
                     this.changeRadiusBtn.FlatAppearance.BorderColor = Color.Black;
                     this.MemoryService.ExitVertexPickersMode();
                     break;
+                case EditMode.RelationMode:
+                    this.newRelationBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.MemoryService.ExitRelationOptions();
+                    break;
             }
             this.Mode = EditMode.Default;
+        }
+
+        public void ExitAnyRelationMode()
+        {
+            switch (this.RelationMode)
+            {
+                case Relation.ExactLength:
+                    this.exactLengthBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.lengthInput.Visible = false;
+                    break;
+                case Relation.ExactRadius:
+                    this.exactRadiusBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.lengthInput.Visible = false;
+                    break;
+                case Relation.SameLength:
+                    this.sameLengthBtn.FlatAppearance.BorderColor = Color.Black;
+                    break;
+                case Relation.Tangency:
+                    this.tangencyBtn.FlatAppearance.BorderColor = Color.Black;
+                    break;
+                case Relation.Perpendicularity:
+                    this.perpendicularityBtn.FlatAppearance.BorderColor = Color.Black;
+                    break;
+                case Relation.DeleteRelation:
+                    this.deleteRelationBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.RelationService.IsDeletingModeOn = false;
+                    break;
+            }
+            this.RelationMode = Relation.None;
+            this.MemoryService.ExitVertexPickersMode();
+            this.RelationService.AbortFirstRelatedRelation();
         }
 
         private void addVerticeBtn_Click(object sender, EventArgs e)
@@ -280,6 +333,7 @@ namespace RasterPaint
             else
             {
                 this.ExitAnyMode();
+                this.ExitAnyRelationMode();
                 this.MemoryService.ExitPolygonOptions();
                 this.MemoryService.ExitCircleOptions();
                 this.Mode = EditMode.AddCircle;
@@ -291,15 +345,17 @@ namespace RasterPaint
         private void circlesListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             this.ExitAnyMode();
+            this.ExitAnyRelationMode();
             if (this.circlesListBox.SelectedItems.Count > 0)
             {
                 this.MemoryService.ExitPolygonOptions();
+                this.MemoryService.ExitRelationOptions();
                 this.MemoryService.SelectedCircle = this.MemoryService.Circles[this.circlesListBox.SelectedItems[0].Index];
                 this.MemoryService.ShowCircleOptions();
             }
             else
             {
-                this.circlePanel.Visible = false;
+                this.circleActions.Visible = false;
             }
         }
 
@@ -330,6 +386,124 @@ namespace RasterPaint
                 this.Mode = EditMode.ChangeRadius;
                 this.changeRadiusBtn.FlatAppearance.BorderColor = Color.Red;
                 this.CircleService.EnterChangeRadiusMode();
+            }
+        }
+
+        private void newRelationBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.RelationMode)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.ExitAnyRelationMode();
+                this.MemoryService.ExitPolygonOptions();
+                this.MemoryService.ExitCircleOptions();
+                this.MemoryService.ShowRelationOptions();
+                this.Mode = EditMode.RelationMode;
+                this.newRelationBtn.FlatAppearance.BorderColor = Color.Red;
+                
+            }
+        }
+
+        private void exactLengthBtn_Click(object sender, EventArgs e)
+        {
+            if (this.RelationMode == Relation.ExactLength)
+            {
+                this.ExitAnyRelationMode();
+            }
+            else
+            {
+                this.ExitAnyRelationMode();
+                this.RelationMode = Relation.ExactLength;
+                this.exactLengthBtn.FlatAppearance.BorderColor = Color.Red;
+                this.lengthInput.Visible = true;
+                this.lengthInput.Value = 0;
+                this.MemoryService.EnterExactLengthMode();
+                pictureBox.Invalidate();
+            }
+        }
+
+        private void exactRadiusBtn_Click(object sender, EventArgs e)
+        {
+            if (this.RelationMode == Relation.ExactRadius)
+            {
+                this.ExitAnyRelationMode();
+            }
+            else
+            {
+                this.ExitAnyRelationMode();
+                this.RelationMode = Relation.ExactRadius;
+                this.exactRadiusBtn.FlatAppearance.BorderColor = Color.Red;
+                this.lengthInput.Visible = true;
+                this.lengthInput.Value = 0;
+                this.MemoryService.EnterRadiusLengthMode();
+                pictureBox.Invalidate();
+            }
+        }
+
+        private void sameLengthBtn_Click(object sender, EventArgs e)
+        {
+            if (this.RelationMode == Relation.SameLength)
+            {
+                this.ExitAnyRelationMode();
+            }
+            else
+            {
+                this.ExitAnyRelationMode();
+                this.RelationMode = Relation.SameLength;
+                this.sameLengthBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.EnterSameLengthMode(true);
+                pictureBox.Invalidate();
+            }
+        }
+
+        private void tangencyBtn_Click(object sender, EventArgs e)
+        {
+            if (this.RelationMode == Relation.Tangency)
+            {
+                this.ExitAnyRelationMode();
+            }
+            else
+            {
+                this.ExitAnyRelationMode();
+                this.RelationMode = Relation.Tangency;
+                this.tangencyBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.EnterTangencyMode(true);
+                pictureBox.Invalidate();
+            }
+        }
+
+        private void perpendicularityBtn_Click(object sender, EventArgs e)
+        {
+            if (this.RelationMode == Relation.Perpendicularity)
+            {
+                this.ExitAnyRelationMode();
+            }
+            else
+            {
+                this.ExitAnyRelationMode();
+                this.RelationMode = Relation.Perpendicularity;
+                this.perpendicularityBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.EnterPerpendicularityMode(true);
+                pictureBox.Invalidate();
+            }
+        }
+
+        private void deleteRelationBtn_Click(object sender, EventArgs e)
+        {
+            if (this.RelationMode == Relation.DeleteRelation)
+            {
+                this.ExitAnyRelationMode();
+            }
+            else
+            {
+                this.ExitAnyRelationMode();
+                this.RelationMode = Relation.DeleteRelation;
+                this.deleteRelationBtn.FlatAppearance.BorderColor = Color.Red;
+                this.RelationService.IsDeletingModeOn = true;
             }
         }
     }

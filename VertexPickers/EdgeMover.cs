@@ -9,16 +9,24 @@ namespace RasterPaint.VertexPickers
     public class EdgeMover : VertexPicker
     {
         private MemoryService memoryService;
+        private RelationService relationService;
+        private CircleService circleService;
+
+        private Circle relatedCircle;
+        private Polygon polygon;
 
         private Point lastLocation;
 
         private int prevIndex;
         private int nextIndex;
 
-        public EdgeMover(Point Origin, MemoryService memoryService, int index) : base(Origin, index)
+        public EdgeMover(Point Origin, MemoryService memoryService, RelationService relationService, CircleService circleService, int index, Polygon polygon) : base(Origin, index)
         {
             this.MouseDown += BeginTracking;
             this.memoryService = memoryService;
+            this.relationService = relationService;
+            this.circleService = circleService;
+            this.polygon = polygon;
         }
 
         private void BeginTracking(object sender, MouseEventArgs e)
@@ -28,18 +36,31 @@ namespace RasterPaint.VertexPickers
             this.MouseMove += Tracking;
             lastLocation = this.Location;
 
-            this.memoryService.LineService.EraseLine(this.memoryService.SelectedPolygon.Edges[Index]);
+            
+
+            this.memoryService.LineService.EraseLine(polygon.Edges[Index]);
             this.memoryService.LineService.BeginTrackingNoUpdate();
 
+            prevIndex = this.Index == 0 ? polygon.Edges.Count - 1 : this.Index - 1;
+            nextIndex = this.Index == polygon.Edges.Count - 1 ? 0 : this.Index + 1;
 
-            prevIndex = this.Index == 0 ? this.memoryService.SelectedPolygon.Edges.Count - 1 : this.Index - 1;
-            nextIndex = this.Index == this.memoryService.SelectedPolygon.Edges.Count - 1 ? 0 : this.Index + 1;
+            if (this.memoryService.VertexPickers.Count > 1)
+            {
+                this.memoryService.VertexPickers[prevIndex].Hide();
+                this.memoryService.VertexPickers[nextIndex].Hide();
+            }
 
-            this.memoryService.VertexPickers[prevIndex].Hide();
-            this.memoryService.VertexPickers[nextIndex].Hide();
+                this.memoryService.LineService.EraseLine(polygon.Edges[prevIndex]);
+                this.memoryService.LineService.EraseLine(polygon.Edges[nextIndex]);
 
-            this.memoryService.LineService.EraseLine(this.memoryService.SelectedPolygon.Edges[prevIndex]);
-            this.memoryService.LineService.EraseLine(this.memoryService.SelectedPolygon.Edges[nextIndex]);
+            this.relatedCircle = this.relationService.GetEdgeRelatedCircle(polygon.Edges[Index]);
+
+            if (this.relatedCircle != null)
+            {
+                this.circleService.BeginTrackingFromGivenBmp(this.memoryService.LineService.TrackingBmp);
+
+                this.circleService.EraseCircle(relatedCircle);
+            }
         }
 
         private void Tracking(object sender, MouseEventArgs e)
@@ -55,7 +76,7 @@ namespace RasterPaint.VertexPickers
             var offsetLocation = (newLocation.X - lastLocation.X, newLocation.Y - lastLocation.Y);
 
 
-            var selectedEdge = this.memoryService.SelectedPolygon.Edges[this.Index];
+            var selectedEdge = polygon.Edges[this.Index];
 
             this.memoryService.LineService.EraseTrackingLine(selectedEdge);
 
@@ -66,8 +87,8 @@ namespace RasterPaint.VertexPickers
                     selectedEdge.Points[1].Y + offsetLocation.Item2) };
 
 
-            var prevEdge = this.memoryService.SelectedPolygon.Edges[prevIndex];
-            var nextEdge = this.memoryService.SelectedPolygon.Edges[nextIndex];
+            var prevEdge = polygon.Edges[prevIndex];
+            var nextEdge = polygon.Edges[nextIndex];
 
             this.memoryService.LineService.EraseTrackingLine(prevEdge);
             this.memoryService.LineService.EraseTrackingLine(nextEdge);
@@ -79,6 +100,13 @@ namespace RasterPaint.VertexPickers
             this.memoryService.LineService.CreateTrackingLine(prevEdge);
             this.memoryService.LineService.CreateTrackingLine(nextEdge);
 
+            if (this.relatedCircle != null)
+            {
+                this.circleService.EraseTrackingCircle(this.relatedCircle);
+                this.relatedCircle.Origin = new Point(this.relatedCircle.Origin.X + offsetLocation.Item1,
+                    this.relatedCircle.Origin.Y + offsetLocation.Item2);
+                this.circleService.CreateTrackingCircle(this.relatedCircle);
+            }
 
             this.memoryService.LineService.PictureBox.Invalidate();
 
@@ -94,23 +122,29 @@ namespace RasterPaint.VertexPickers
             this.MouseMove -= Tracking;
             this.MouseDown += BeginTracking;
 
-            this.memoryService.LineService.StopTracking(this.memoryService.SelectedPolygon.Edges[Index]);
-            this.memoryService.LineService.StopTracking(this.memoryService.SelectedPolygon.Edges[prevIndex]);
-            this.memoryService.LineService.StopTracking(this.memoryService.SelectedPolygon.Edges[nextIndex]);
+            this.memoryService.LineService.StopTracking(polygon.Edges[Index]);
+            this.memoryService.LineService.StopTracking(polygon.Edges[prevIndex]);
+            this.memoryService.LineService.StopTracking(polygon.Edges[nextIndex]);
 
+            if (this.memoryService.VertexPickers.Count > 1)
+            {
+                var prevMidPoint = polygon.Edges[prevIndex].EvaluateMidPoint();
+                var nextMidPoint = polygon.Edges[nextIndex].EvaluateMidPoint();
 
-            var prevMidPoint = this.memoryService.SelectedPolygon.Edges[prevIndex].EvaluateMidPoint();
-            var nextMidPoint = this.memoryService.SelectedPolygon.Edges[nextIndex].EvaluateMidPoint();
+                this.memoryService.VertexPickers[prevIndex].Location = new Point(prevMidPoint.X - PickerSize.Width / 2, prevMidPoint.Y - PickerSize.Height / 2);
+                this.memoryService.VertexPickers[nextIndex].Location = new Point(nextMidPoint.X - PickerSize.Width / 2, nextMidPoint.Y - PickerSize.Height / 2);
+                this.memoryService.VertexPickers[prevIndex].Show();
+                this.memoryService.VertexPickers[nextIndex].Show();
+            }
 
+            polygon.Vertices[Index] = polygon.Edges[Index].Points[0];
+            polygon.Vertices[nextIndex] = polygon.Edges[Index].Points[1];
 
-            this.memoryService.VertexPickers[prevIndex].Location = new Point(prevMidPoint.X - PickerSize.Width / 2, prevMidPoint.Y - PickerSize.Height / 2);
-            this.memoryService.VertexPickers[nextIndex].Location = new Point(nextMidPoint.X - PickerSize.Width / 2, nextMidPoint.Y - PickerSize.Height / 2);
-            this.memoryService.VertexPickers[prevIndex].Show();
-            this.memoryService.VertexPickers[nextIndex].Show();
-
-            this.memoryService.SelectedPolygon.Vertices[Index] = this.memoryService.SelectedPolygon.Edges[Index].Points[0];
-            this.memoryService.SelectedPolygon.Vertices[nextIndex] = this.memoryService.SelectedPolygon.Edges[Index].Points[1];
-
+            if (this.relatedCircle != null)
+            {
+                this.circleService.CreateCircle(this.relatedCircle);
+                this.circleService.StopTrackingNoDrawing();
+            }
         }
     }
 }

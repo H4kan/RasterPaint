@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RasterPaint.Enums;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
@@ -8,6 +9,10 @@ namespace RasterPaint
     public class Line
     {
         public List<Point> Points = new List<Point>();
+
+        public Relation Relation { get; set; }
+
+        public bool HasNeighbouringRelation { get; set; }
 
         public void AppendPoint(Point point)
         {

@@ -22,6 +22,8 @@ namespace RasterPaint
 
         public PictureBox PictureBox { get; set; }
 
+        public bool IsLineTracking { get; set; }
+
         public LineService(Bitmap bmp, PictureBox pictureBox)
         {
             this.Bmp = bmp;
@@ -32,6 +34,7 @@ namespace RasterPaint
 
         public void BeginTracking(int x, int y)
         {
+            this.IsLineTracking = true;
             TrackingBmp = (Bitmap)Bmp.Clone();
             this.BrensehamTrackingLine = new BresenhamLine(TrackingBmp);
             this.PictureBox.Image = TrackingBmp;
@@ -115,6 +118,7 @@ namespace RasterPaint
             LineTracker = null;
 
             this.PictureBox.Invalidate();
+            this.IsLineTracking = false;
         }
 
         public Line CreateLine(int x1, int y1, int x2, int y2)

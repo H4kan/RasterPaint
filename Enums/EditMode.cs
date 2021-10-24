@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace RasterPaint
+namespace RasterPaint.Enums
 {
     public enum EditMode
     {
@@ -15,6 +15,7 @@ namespace RasterPaint
         MovePolygon,
         AddCircle,
         MoveCircle,
-        ChangeRadius
+        ChangeRadius,
+        RelationMode
     }
 }

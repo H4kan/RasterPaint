@@ -16,6 +16,9 @@
     <Compile Update="VertexPickers\EdgeMover.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Update="VertexPickers\ExactLengthPicker.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Update="VertexPickers\Mover.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -23,6 +26,18 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Update="VertexPickers\RadiusChanger.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="VertexPickers\RadiusLengthPicker.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="VertexPickers\RelationPicker.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="VertexPickers\SameLengthPicker.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="VertexPickers\TangencyPicker.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Update="VertexPickers\VertexPicker.cs">

@@ -24,9 +24,11 @@ namespace RasterPaint.VertexPickers
             this.circleService.Origin = this.circleService.MemoryService.SelectedCircle.Origin;
             this.MouseMove += this.Tracking;
 
-
-            this.circleService.BeginTrackingNoUpdate();
+            this.circleService.MemoryService.LineService.BeginTrackingNoUpdate();
+            this.circleService.BeginTrackingFromGivenBmp(this.circleService.MemoryService.LineService.TrackingBmp);
             this.circleService.EraseCircle(this.circleService.MemoryService.SelectedCircle);
+
+            this.circleService.StartTrackingTangency(this.circleService.CurrentCircle);
 
         }
 
@@ -43,7 +45,12 @@ namespace RasterPaint.VertexPickers
             this.Location = newLocation;
             this.circleService.Tracking(sender, new MouseEventArgs(MouseButtons.Left, 1, 
                 newLocation.X + PickerSize.Width / 2, 
-                newLocation.Y + PickerSize.Height / 2, 0));        
+                newLocation.Y + PickerSize.Height / 2, 0));
+
+            if (this.circleService.CurrentCircle.TangentRelation != Enums.Relation.None)
+            {
+                this.circleService.FixTrackingTangency(this.circleService.CurrentCircle);
+            }
         }
 
         private void StopTracking(object sender, MouseEventArgs e)
@@ -54,7 +61,10 @@ namespace RasterPaint.VertexPickers
 
             this.circleService.MemoryService.SelectedCircle.Radius = this.circleService.CurrentCircle.Radius;
             var currCircle = this.circleService.MemoryService.SelectedCircle;
-            this.circleService.CreateCircle(currCircle.Origin.X, currCircle.Origin.Y, currCircle.Radius);
+
+            this.circleService.CreateCircle(currCircle);
+
+            this.circleService.FinishTrackingTangency(this.circleService.CurrentCircle);
 
             this.circleService.StopTrackingNoDrawing();
 

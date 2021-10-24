@@ -9,12 +9,17 @@ namespace RasterPaint.VertexPickers
     public class PolyMover : VertexPicker
     {
         private MemoryService memoryService;
+        private RelationService relationService;
+        private CircleService circleService;
         private Point lastLocation;
+        private List<Circle> relatedCircles;
 
-        public PolyMover(Point Origin, MemoryService memoryService, int index) : base(Origin, index)
+        public PolyMover(Point Origin, MemoryService memoryService, RelationService relationService, CircleService circleService, int index) : base(Origin, index)
         {
             this.MouseDown += BeginTracking;
             this.memoryService = memoryService;
+            this.relationService = relationService;
+            this.circleService = circleService;
         }
 
         private void BeginTracking(object sender, MouseEventArgs e)
@@ -29,6 +34,14 @@ namespace RasterPaint.VertexPickers
             {
                 this.memoryService.LineService.EraseLine(line);
             }
+            this.circleService.BeginTrackingFromGivenBmp(this.memoryService.LineService.TrackingBmp);
+
+
+            this.relatedCircles = this.relationService.GetPolygonRelatedCircles(this.memoryService.SelectedPolygon);
+            foreach (var circle in this.relatedCircles)
+            {
+                this.circleService.EraseCircle(circle);
+            }
         }
 
         private void Tracking(object sender, MouseEventArgs e)
@@ -39,6 +52,7 @@ namespace RasterPaint.VertexPickers
 
             var newLocation = new Point(globalEventLocation.X - globalPictureBoxLocation.X - PickerSize.Width / 2,
                 globalEventLocation.Y - globalPictureBoxLocation.Y - PickerSize.Height / 2);
+
 
             var offsetLocation = (newLocation.X - lastLocation.X, newLocation.Y - lastLocation.Y);
 
@@ -59,10 +73,23 @@ namespace RasterPaint.VertexPickers
                     currLine.Points[1].Y + offsetLocation.Item2);
 
                 this.memoryService.LineService.CreateTrackingLine(currLine);
+
+            
+            }
+            for (int i = 0; i < this.memoryService.VertexPickers.Count; i++)
+            {
+                var oldPickerPoint = this.memoryService.VertexPickers[i].Location;
+                this.memoryService.VertexPickers[i].Location = new Point(oldPickerPoint.X + offsetLocation.Item1,
+                    oldPickerPoint.Y + offsetLocation.Item2);
             }
 
+            foreach(var circle in this.relatedCircles)
+            {
+                this.circleService.EraseTrackingCircle(circle);
+                circle.Origin = new Point(circle.Origin.X + offsetLocation.Item1, circle.Origin.Y + offsetLocation.Item2);
+                this.circleService.CreateTrackingCircle(circle);
+            }
 
-            this.Location = newLocation;
             this.memoryService.LineService.PictureBox.Invalidate();
 
             lastLocation = newLocation;
@@ -81,7 +108,13 @@ namespace RasterPaint.VertexPickers
                 this.memoryService.LineService.CreateLine(line);
             }
 
+            foreach (var circle in this.relatedCircles)
+            {
+                this.circleService.CreateCircle(circle);
+            }
+
             this.memoryService.LineService.StopTrackingNoDrawing();
+            this.circleService.StopTrackingNoDrawing();
         }
     }
 }

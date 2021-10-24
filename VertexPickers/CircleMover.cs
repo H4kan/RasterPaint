@@ -61,7 +61,7 @@ namespace RasterPaint.VertexPickers
             this.MouseDown += BeginTracking;
 
             var currCircle = this.circleService.MemoryService.SelectedCircle;
-            this.circleService.CreateCircle(currCircle.Origin.X, currCircle.Origin.Y, currCircle.Radius);
+            this.circleService.CreateCircle(currCircle);
 
             this.circleService.StopTrackingNoDrawing();
 

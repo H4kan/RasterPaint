@@ -8,7 +8,7 @@ namespace RasterPaint.VertexPickers
 {
     public class VertexPicker : Button
     {
-        protected Size PickerSize = new Size(15, 15);
+        protected virtual Size PickerSize { get { return new Size(15, 15);  } }
 
         public int Index { get; set; }
 
@@ -17,6 +17,11 @@ namespace RasterPaint.VertexPickers
             this.Size = PickerSize;
             this.Location = new Point(Origin.X - PickerSize.Width / 2, Origin.Y - PickerSize.Height / 2);
             this.Index = index;
+        }
+
+        public void SetLocation(Point point)
+        {
+            this.Location = new Point(point.X - PickerSize.Width / 2, point.Y - PickerSize.Height / 2);
         }
     }
 }
