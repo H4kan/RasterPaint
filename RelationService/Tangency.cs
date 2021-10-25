@@ -23,20 +23,13 @@ namespace RasterPaint
 
             var edge = polygon.Edges[index];
 
-            //var prevIndex = index == 0 ? polygon.Edges.Count - 1 : index - 1;
-            //var nextIndex = index == polygon.Edges.Count - 1 ? 0 : index + 1;
-
             if (toTracking)
             {
-                //RelationService.MemoryService.LineService.EraseTrackingLine(polygon.Edges[prevIndex]);
                 RelationService.MemoryService.LineService.EraseTrackingLine(polygon.Edges[index]);
-                //RelationService.MemoryService.LineService.EraseTrackingLine(polygon.Edges[nextIndex]);
             }
             else
             {
-                //RelationService.MemoryService.LineService.EraseLine(polygon.Edges[prevIndex]);
                 RelationService.MemoryService.LineService.EraseLine(polygon.Edges[index]);
-                //RelationService.MemoryService.LineService.EraseLine(polygon.Edges[nextIndex]);
             }
            
 
@@ -73,35 +66,21 @@ namespace RasterPaint
             edge.Points[0] = new Point(edge.Points[0].X + vecToMoveEdge.Item1, edge.Points[0].Y + vecToMoveEdge.Item2);
             edge.Points[1] = new Point(edge.Points[1].X + vecToMoveEdge.Item1, edge.Points[1].Y + vecToMoveEdge.Item2);
 
-
-            //polygon.Edges[prevIndex].Points[1] = edge.Points[0];
-            //polygon.Edges[nextIndex].Points[0] = edge.Points[1];
-
-            //polygon.Vertices[index] = edge.Points[0];
-            //polygon.Vertices[nextIndex] = edge.Points[1];
-
             if (toTracking)
             {
-                //RelationService.MemoryService.LineService.CreateTrackingLine(polygon.Edges[prevIndex]);
                 RelationService.MemoryService.LineService.CreateTrackingLine(polygon.Edges[index]);
-                //RelationService.MemoryService.LineService.CreateTrackingLine(polygon.Edges[nextIndex]);
 
             }
             else
             {
-                //RelationService.MemoryService.LineService.CreateLine(polygon.Edges[prevIndex]);
                 RelationService.MemoryService.LineService.CreateLine(polygon.Edges[index]);
-                //RelationService.MemoryService.LineService.CreateLine(polygon.Edges[nextIndex]);
-
             }
 
 
             polygon.Edges[index].Relation = Relation.Tangency;
-            //polygon.Edges[prevIndex].HasNeighbouringRelation = true;
-            //polygon.Edges[nextIndex].HasNeighbouringRelation = true;
 
             this.RelationService.FirstOfRelatedRelation = null;
-            this.RelationService.MoveRelatedEdgesByOffset(polygon, index, vecToMoveEdge, vecToMoveEdge);
+            this.RelationService.MoveRelatedEdgesByOffset(polygon, index, vecToMoveEdge, vecToMoveEdge, toTracking);
 
             RelationService.MemoryService.LineService.PictureBox.Invalidate();
 

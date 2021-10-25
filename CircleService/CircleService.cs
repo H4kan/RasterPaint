@@ -210,10 +210,18 @@ namespace RasterPaint
         public void FixTrackingTangency(Circle circle)
         {
             var tangentRelation = this.form.RelationService.RelationHandlers.Find(r => r.CircleTarget == circle && r.Type == Relation.Tangency);
+            foreach(var edge in tangentRelation.RelatedRelation.PolygonTarget.Edges)
+            {
+                this.MemoryService.LineService.EraseLine(edge);
+            }
             (tangentRelation.RelatedRelation as Tangency)
                 .SetTangency(tangentRelation.RelatedRelation.PolygonTarget,
                 tangentRelation.RelatedRelation.PolygonTarget.Edges.FindIndex(e => e == tangentRelation.RelatedRelation.EdgeTarget),
                 tangentRelation.CircleTarget, true);
+            foreach (var edge in tangentRelation.RelatedRelation.PolygonTarget.Edges)
+            {
+                this.MemoryService.LineService.CreateLine(edge);
+            }
         }
 
         public void FinishTrackingTangency(Circle circle)

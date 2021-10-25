@@ -472,31 +472,31 @@ namespace RasterPaint
 
             polygonsToAdd.Add(poly1);
 
-            var poly2 = new Polygon(700, 200);
+            var poly2 = new Polygon(750, 200);
 
             var line6 = new Line();
-            line6.AppendPoint(new Point(700, 200));
-            line6.AppendPoint(new Point(700, 300));
+            line6.AppendPoint(new Point(750, 200));
+            line6.AppendPoint(new Point(750, 300));
             poly2.AppendLine(line6);
 
             var line7 = new Line();
-            line7.AppendPoint(new Point(700, 300));
-            line7.AppendPoint(new Point(850, 450));
+            line7.AppendPoint(new Point(750, 300));
+            line7.AppendPoint(new Point(900, 450));
             poly2.AppendLine(line7);
 
             var line8 = new Line();
-            line8.AppendPoint(new Point(850, 450));
-            line8.AppendPoint(new Point(900, 700));
+            line8.AppendPoint(new Point(900, 450));
+            line8.AppendPoint(new Point(950, 700));
             poly2.AppendLine(line8);
 
             var line9 = new Line();
-            line9.AppendPoint(new Point(900, 700));
-            line9.AppendPoint(new Point(900, 300));
+            line9.AppendPoint(new Point(950, 700));
+            line9.AppendPoint(new Point(950, 300));
             poly2.AppendLine(line9);
 
             var line10 = new Line();
-            line10.AppendPoint(new Point(900, 300));
-            line10.AppendPoint(new Point(700, 200));
+            line10.AppendPoint(new Point(950, 300));
+            line10.AppendPoint(new Point(750, 200));
 
             poly2.CompletePolygon(line10);
 
@@ -525,6 +525,7 @@ namespace RasterPaint
             this.form.RelationService.InvokePerpendicularitySecond(poly2, 4);
 
             this.form.RelationService.RemoveRelationsFromView();
+            this.form.ExitAnyRelationMode();
 
             this.pictureBox.Invalidate();
 

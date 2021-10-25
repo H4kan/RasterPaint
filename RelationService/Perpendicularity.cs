@@ -23,12 +23,7 @@ namespace RasterPaint
 
             var edge = polygon.Edges[index];
 
-            //var prevIndex = index == 0 ? polygon.Edges.Count - 1 : index - 1;
-            //var nextIndex = index == polygon.Edges.Count - 1 ? 0 : index + 1;
-
-            //MemoryService.LineService.EraseLine(polygon.Edges[prevIndex]);
             MemoryService.LineService.EraseLine(polygon.Edges[index]);
-            //MemoryService.LineService.EraseLine(polygon.Edges[nextIndex]);
 
             var currDist = Math.Max(Utils.CalculateDistance(edge.Points[0], edge.Points[1]), 1);
 
@@ -50,8 +45,6 @@ namespace RasterPaint
                 // unit vector is [1, a]
 
                 var vecRatio = currDist / (2 * Math.Sqrt(a * a + 1));
-
- 
 
                 firstPoint = new Point(Convert.ToInt32(Math.Round(midPoint.X + vecRatio)), Convert.ToInt32(Math.Round(midPoint.Y + vecRatio * a)));
 
@@ -75,23 +68,13 @@ namespace RasterPaint
                 edge.Points[0] = secPoint;
             }
 
-
-            //polygon.Edges[prevIndex].Points[1] = edge.Points[0];
-            //polygon.Edges[nextIndex].Points[0] = edge.Points[1];
-
-            //polygon.Vertices[index] = edge.Points[0];
-            //polygon.Vertices[nextIndex] = edge.Points[1];
-
-            //MemoryService.LineService.CreateLine(polygon.Edges[prevIndex]);
             MemoryService.LineService.CreateLine(polygon.Edges[index]);
-            //MemoryService.LineService.CreateLine(polygon.Edges[nextIndex]);
 
             polygon.Edges[index].Relation = Relation.Perpendicularity;
-            //polygon.Edges[prevIndex].HasNeighbouringRelation = true;
-            //polygon.Edges[nextIndex].HasNeighbouringRelation = true;
+
 
             this.MemoryService.form.RelationService.FirstOfRelatedRelation = null;
-            this.MemoryService.form.RelationService.MoveRelatedEdgesByOffset(polygon, index, offsetBottom, offsetTop);
+            this.MemoryService.form.RelationService.MoveRelatedEdgesByOffset(polygon, index, offsetBottom, offsetTop, false);
 
             this.MemoryService.LineService.PictureBox.Invalidate();
 

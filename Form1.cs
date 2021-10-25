@@ -50,7 +50,7 @@ namespace RasterPaint
             this.CircleService = new CircleService(this, this.bmp, this.pictureBox, this.MemoryService);
             this.RelationService = new RelationService(this.MemoryService, this.lengthInput, this.CircleService);
 
-            //this.MemoryService.CreateInitialScene();
+            this.MemoryService.CreateInitialScene();
         }
 
         private void SetupScreen()

@@ -390,7 +390,7 @@ namespace RasterPaint
             return null;
         }
 
-        public void MoveRelatedEdgesByOffset(Polygon polygon, int startingIdx, (int, int) offsetBottom, (int, int) offsetTop)
+        public void MoveRelatedEdgesByOffset(Polygon polygon, int startingIdx, (int, int) offsetBottom, (int, int) offsetTop, bool toTracking)
         {
             int nextIdx = (startingIdx + 1) % polygon.Edges.Count;
 
@@ -411,10 +411,25 @@ namespace RasterPaint
                             circleToMove.Origin.X + offsetTop.Item1,
                             circleToMove.Origin.Y + offsetTop.Item2);
 
-                        this.CircleService.CreateCircle(circleToMove);
+                        if (toTracking)
+                        {
+                            this.CircleService.CreateTrackingCircle(circleToMove);
+                        }
+                        else
+                        {
+                            this.CircleService.CreateCircle(circleToMove);
+                        }
+                     
                     }
-
-                    this.MemoryService.LineService.EraseLine(polygon.Edges[nextIdx]);
+                    if (toTracking)
+                    {
+                        this.MemoryService.LineService.EraseTrackingLine(polygon.Edges[nextIdx]);
+                    }
+                    else
+                    {
+                        this.MemoryService.LineService.EraseLine(polygon.Edges[nextIdx]);
+                    }
+                    
 
                     polygon.Edges[nextIdx].Points[0] = new Point(
                         polygon.Edges[nextIdx].Points[0].X + offsetTop.Item1,
@@ -426,7 +441,15 @@ namespace RasterPaint
 
                     polygon.Vertices[nextIdx] = polygon.Edges[nextIdx].Points[0];
 
-                    this.MemoryService.LineService.CreateLine(polygon.Edges[nextIdx]);
+                    if (toTracking)
+                    {
+                        this.MemoryService.LineService.CreateTrackingLine(polygon.Edges[nextIdx]);
+                    }
+                    else
+                    {
+                        this.MemoryService.LineService.CreateLine(polygon.Edges[nextIdx]);
+                    }
+                   
 
                     
 
@@ -434,7 +457,15 @@ namespace RasterPaint
                 }
                 else
                 {
-                    this.MemoryService.LineService.EraseLine(polygon.Edges[nextIdx]);
+                    if (toTracking)
+                    {
+                        this.MemoryService.LineService.EraseTrackingLine(polygon.Edges[nextIdx]);
+                    }
+                    else
+                    {
+                        this.MemoryService.LineService.EraseLine(polygon.Edges[nextIdx]);
+                    }
+                    
 
                     polygon.Edges[nextIdx].Points[0] = new Point(
                         polygon.Edges[nextIdx].Points[0].X + offsetTop.Item1,
@@ -442,7 +473,16 @@ namespace RasterPaint
 
                     polygon.Vertices[nextIdx] = polygon.Edges[nextIdx].Points[0];
 
-                    this.MemoryService.LineService.CreateLine(polygon.Edges[nextIdx]);
+                    if (toTracking)
+                    {
+                        this.MemoryService.LineService.CreateTrackingLine(polygon.Edges[nextIdx]);
+                    }
+                    else
+                    {
+                        this.MemoryService.LineService.CreateLine(polygon.Edges[nextIdx]);
+                    }
+
+                   
                     break;
                 }
             }
@@ -459,15 +499,39 @@ namespace RasterPaint
 
                         var circleToMove = relationHandler.RelatedRelation.CircleTarget;
 
-                        this.CircleService.EraseCircle(circleToMove);
+                        if (toTracking)
+                        {
+                            this.CircleService.EraseTrackingCircle(circleToMove);
+                        }
+                        else
+                        {
+                            this.CircleService.EraseCircle(circleToMove);
+                        }
+                        
 
                         circleToMove.Origin = new Point(
                             circleToMove.Origin.X + offsetBottom.Item1,
                             circleToMove.Origin.Y + offsetBottom.Item2);
 
-                        this.CircleService.CreateCircle(circleToMove);
+                        if (toTracking)
+                        {
+                            this.CircleService.CreateTrackingCircle(circleToMove);
+                        }
+                        else
+                        {
+                            this.CircleService.CreateCircle(circleToMove);
+                        }
+                        
                     }
-                    this.MemoryService.LineService.EraseLine(polygon.Edges[prevIdx]);
+                    if (toTracking)
+                    {
+                        this.MemoryService.LineService.EraseTrackingLine(polygon.Edges[prevIdx]);
+                    }
+                    else
+                    {
+                        this.MemoryService.LineService.EraseLine(polygon.Edges[prevIdx]);
+                    }
+                    
 
                     polygon.Edges[prevIdx].Points[0] = new Point(
                         polygon.Edges[prevIdx].Points[0].X + offsetBottom.Item1,
@@ -479,13 +543,29 @@ namespace RasterPaint
 
                     polygon.Vertices[prevIdx] = polygon.Edges[prevIdx].Points[0];
 
-                    this.MemoryService.LineService.CreateLine(polygon.Edges[prevIdx]);
+                    if (toTracking)
+                    {
+                        this.MemoryService.LineService.CreateTrackingLine(polygon.Edges[prevIdx]);
+                    }
+                    else
+                    {
+                        this.MemoryService.LineService.CreateLine(polygon.Edges[prevIdx]);
+                    }
+                    
 
                     prevIdx = prevIdx > 0 ? prevIdx - 1 : polygon.Edges.Count - 1;
                 }
                 else
                 {
-                    this.MemoryService.LineService.EraseLine(polygon.Edges[prevIdx]);
+                    if (toTracking)
+                    {
+                        this.MemoryService.LineService.EraseTrackingLine(polygon.Edges[prevIdx]);
+                    }
+                    else
+                    {
+                        this.MemoryService.LineService.EraseLine(polygon.Edges[prevIdx]);
+                    }
+                    
 
                     polygon.Edges[prevIdx].Points[1] = new Point(
                         polygon.Edges[prevIdx].Points[1].X + offsetBottom.Item1,
@@ -493,13 +573,24 @@ namespace RasterPaint
 
                     polygon.Vertices[prevIdx] = polygon.Edges[prevIdx].Points[1];
 
-                    this.MemoryService.LineService.CreateLine(polygon.Edges[prevIdx]);
+                    if (toTracking)
+                    {
+                        this.MemoryService.LineService.CreateTrackingLine(polygon.Edges[prevIdx]);
+                    }
+                    else
+                    {
+                        this.MemoryService.LineService.CreateLine(polygon.Edges[prevIdx]);
+                    }
+                   
                     break;
                 }
             }
 
-            this.RemoveRelationsFromView();
-            this.AppendRelationsToView();
+            if (this.CircleService.MemoryService.form.Mode == EditMode.RelationMode)
+            {
+                this.RemoveRelationsFromView();
+                this.AppendRelationsToView();
+            }
         }
     }
 }

@@ -24,9 +24,8 @@ namespace RasterPaint
             var prevIndex = index == 0 ? polygon.Edges.Count - 1 : index - 1;
             var nextIndex = index == polygon.Edges.Count - 1 ? 0 : index + 1;
 
-            //MemoryService.LineService.EraseLine(polygon.Edges[prevIndex]);
             MemoryService.LineService.EraseLine(polygon.Edges[index]);
-            //MemoryService.LineService.EraseLine(polygon.Edges[nextIndex]);
+
 
             var midPoint = line.EvaluateMidPoint();
 
@@ -71,22 +70,18 @@ namespace RasterPaint
 
             polygon.Edges[index] = newLine;
 
-            //polygon.Edges[prevIndex].Points[1] = firstPoint;
-            //polygon.Edges[nextIndex].Points[0] = secPoint;
-
             polygon.Vertices[index] = firstPoint;
             polygon.Vertices[nextIndex] = secPoint;
 
-            //MemoryService.LineService.CreateLine(polygon.Edges[prevIndex]);
             MemoryService.LineService.CreateLine(polygon.Edges[index]);
-            //MemoryService.LineService.CreateLine(polygon.Edges[nextIndex]);
+
 
             polygon.Edges[index].Relation = Relation.ExactLength;
             polygon.Edges[prevIndex].HasNeighbouringRelation = true;
             polygon.Edges[nextIndex].HasNeighbouringRelation = true;
 
             this.MemoryService.form.RelationService.FirstOfRelatedRelation = null;
-            this.MemoryService.form.RelationService.MoveRelatedEdgesByOffset(polygon, index, offsetBottom, offsetTop);
+            this.MemoryService.form.RelationService.MoveRelatedEdgesByOffset(polygon, index, offsetBottom, offsetTop, false);
 
 
             this.MemoryService.LineService.PictureBox.Invalidate();

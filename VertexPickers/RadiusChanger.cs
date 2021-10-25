@@ -24,11 +24,13 @@ namespace RasterPaint.VertexPickers
             this.circleService.Origin = this.circleService.MemoryService.SelectedCircle.Origin;
             this.MouseMove += this.Tracking;
 
+            this.circleService.StartTrackingTangency(this.circleService.CurrentCircle);
+
             this.circleService.MemoryService.LineService.BeginTrackingNoUpdate();
             this.circleService.BeginTrackingFromGivenBmp(this.circleService.MemoryService.LineService.TrackingBmp);
             this.circleService.EraseCircle(this.circleService.MemoryService.SelectedCircle);
 
-            this.circleService.StartTrackingTangency(this.circleService.CurrentCircle);
+         
 
         }
 
