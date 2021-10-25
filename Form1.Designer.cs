@@ -29,9 +29,6 @@ namespace RasterPaint
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem("");
-            System.Windows.Forms.ListViewItem listViewItem2 = new System.Windows.Forms.ListViewItem("");
-            System.Windows.Forms.ListViewItem listViewItem3 = new System.Windows.Forms.ListViewItem("");
             this.pictureBox = new System.Windows.Forms.PictureBox();
             this.NewPolygonBtn = new System.Windows.Forms.Button();
             this.memoryPanel = new System.Windows.Forms.Panel();
@@ -361,10 +358,6 @@ namespace RasterPaint
             // circlesListBox
             // 
             this.circlesListBox.HideSelection = false;
-            this.circlesListBox.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem1,
-            listViewItem2,
-            listViewItem3});
             this.circlesListBox.Location = new System.Drawing.Point(108, 805);
             this.circlesListBox.Name = "circlesListBox";
             this.circlesListBox.Size = new System.Drawing.Size(151, 159);
